@@ -28,24 +28,24 @@ jobs:
       - name: Inicializar y Configurar Buildozer
         run: |
           buildozer init
-          # Forzar el uso del NDK r25c para evitar el error de compilación en SDL2
+          # Ajustes estables de compatibilidad con NDK 25c
           sed -i 's/#android.ndk = 25c/android.ndk = 25c/g' buildozer.spec
           sed -i 's/#android.ndk_api = 21/android.ndk_api = 21/g' buildozer.spec
           sed -i 's/android.api = 33/android.api = 33/g' buildozer.spec
           
-          # Ajustes limpios de dependencias y arquitectura única
+          # Forzar solo la arquitectura moderna de 64 bits para ir al doble de velocidad
           sed -i 's/requirements = python3,kivy/requirements = python3,kivy/g' buildozer.spec
           sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/g' buildozer.spec
           sed -i 's/# android.no-byte-compile-python = False/android.no-byte-compile-python = True/g' buildozer.spec
 
-      - name: Compilar APK con Sincronizacion Completa
+      - name: Compilar APK en Modo Silencioso (Evita caídas de memoria)
         run: |
-          # Eliminar variables preconfiguradas del sistema de GitHub
           unset ANDROID_NDK
           unset ANDROID_NDK_HOME
           unset ANDROID_NDK_ROOT
           unset ANDROID_NDK_LATEST_HOME
-          yes | buildozer -v android debug
+          # Usamos 'buildozer android debug' común para que no sature la pantalla de texto plano
+          yes | buildozer android debug
 
       - name: Subir APK Resultante
         uses: actions/upload-artifact@v4
