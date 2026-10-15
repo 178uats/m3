@@ -16,30 +16,33 @@ jobs:
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Instalar herramientas de compilacion completas
         run: |
           sudo apt update
           sudo apt install -y git zip unzip autoconf libtool libltdl-dev pkg-config zlib1g-dev libncurses5-dev libssl-dev cmake
           pip install --upgrade pip
-          pip install buildozer cython
+          pip install "buildozer>=1.5.0" "cython<3.0.0"
 
       - name: Inicializar y Configurar Buildozer
         run: |
           buildozer init
-          # Ajustes para asegurar compatibilidad de Kivy y Android en GitHub
+          # Ajustes críticos de estabilidad y velocidad
           sed -i 's/#android.ndk_api = 21/android.ndk_api = 21/g' buildozer.spec
           sed -i 's/android.api = 33/android.api = 33/g' buildozer.spec
-          sed -i 's/requirements = python3,kivy/requirements = python3,kivy/g' buildozer.spec
+          sed -i 's/requirements = python3,kivy/requirements = python3==3.11.1,kivy/g' buildozer.spec
+          
+          # Desactivar compilación de bytes redundante para no saturar memoria
+          sed -i 's/# android.no-byte-compile-python = False/android.no-byte-compile-python = True/g' buildozer.spec
 
-      - name: Compilar APK limpiando variables de entorno conflictivas
+      - name: Compilar APK sin saturar logs
         run: |
-          # Borramos las variables preconfiguradas de GitHub para evitar conflictos de rutas
           unset ANDROID_NDK
           unset ANDROID_NDK_HOME
           unset ANDROID_NDK_ROOT
           unset ANDROID_NDK_LATEST_HOME
+          # Compilamos aceptando licencias automáticamente
           yes | buildozer -v android debug
 
       - name: Subir APK Resultante
