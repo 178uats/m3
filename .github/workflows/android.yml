@@ -21,28 +21,30 @@ jobs:
       - name: Instalar herramientas de compilacion completas
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip autoconf libtool libltdl-dev pkg-config zlib1g-dev libncurses5-dev libssl-dev cmake
+          sudo apt install -y git zip unzip autoconf libtool libltdl-dev pkg-config zlib1g-dev libncurses5-dev libssl-dev cmake ccache
           pip install --upgrade pip
           pip install "buildozer>=1.5.0" "cython<3.0.0"
 
       - name: Inicializar y Configurar Buildozer
         run: |
           buildozer init
-          # Ajustes críticos de estabilidad y velocidad
+          # Ajustes críticos para evitar caídas por falta de memoria y timeout
           sed -i 's/#android.ndk_api = 21/android.ndk_api = 21/g' buildozer.spec
           sed -i 's/android.api = 33/android.api = 33/g' buildozer.spec
           sed -i 's/requirements = python3,kivy/requirements = python3==3.11.1,kivy/g' buildozer.spec
           
-          # Desactivar compilación de bytes redundante para no saturar memoria
+          # TRUCO DE VELOCIDAD: Compilar solo para celulares modernos (64 bits) corta el tiempo a la mitad
+          sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/g' buildozer.spec
+          
+          # Desactivar la compilación recursiva inútil que satura el servidor
           sed -i 's/# android.no-byte-compile-python = False/android.no-byte-compile-python = True/g' buildozer.spec
 
-      - name: Compilar APK sin saturar logs
+      - name: Compilar APK Optimizada
         run: |
           unset ANDROID_NDK
           unset ANDROID_NDK_HOME
           unset ANDROID_NDK_ROOT
           unset ANDROID_NDK_LATEST_HOME
-          # Compilamos aceptando licencias automáticamente
           yes | buildozer -v android debug
 
       - name: Subir APK Resultante
