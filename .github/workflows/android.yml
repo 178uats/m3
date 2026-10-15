@@ -1,0 +1,39 @@
+name: Compilar APK de Kivy
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar herramientas de compilacion
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libssl-dev cmake
+          pip install --upgrade pip
+          pip install buildozer cython
+
+      - name: Inicializar y Compilar APK
+        run: |
+          buildozer init
+          # Modifica automaticamente el archivo spec para asegurar que use Kivy
+          sed -i 's/requirements = python3,kivy/requirements = python3,kivy/g' buildozer.spec
+          yes | buildozer -v android debug
+
+      - name: Subir APK Resultante
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3
+          path: bin/*.apk
