@@ -25,26 +25,31 @@ jobs:
           pip install --upgrade pip
           pip install "buildozer>=1.5.0" "cython<3.0.0"
 
+      - name: Limpiar memoria cache residual de intentos fallidos
+        run: |
+          # Forzamos el borrado de cualquier configuración vieja del NDK r28c
+          rm -rf ~/.buildozer
+          rm -rf .buildozer
+
       - name: Inicializar y Configurar Buildozer
         run: |
           buildozer init
-          # Ajustes estables de compatibilidad con NDK 25c
+          # Ajustes nativos obligatorios con el NDK estable 25c
           sed -i 's/#android.ndk = 25c/android.ndk = 25c/g' buildozer.spec
           sed -i 's/#android.ndk_api = 21/android.ndk_api = 21/g' buildozer.spec
           sed -i 's/android.api = 33/android.api = 33/g' buildozer.spec
           
-          # Forzar solo la arquitectura moderna de 64 bits para ir al doble de velocidad
+          # Arquitectura única moderna y desactivación de bytes redundantes
           sed -i 's/requirements = python3,kivy/requirements = python3,kivy/g' buildozer.spec
           sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/g' buildozer.spec
           sed -i 's/# android.no-byte-compile-python = False/android.no-byte-compile-python = True/g' buildozer.spec
 
-      - name: Compilar APK en Modo Silencioso (Evita caídas de memoria)
+      - name: Compilar APK Limpio (Modo Silencioso)
         run: |
           unset ANDROID_NDK
           unset ANDROID_NDK_HOME
           unset ANDROID_NDK_ROOT
           unset ANDROID_NDK_LATEST_HOME
-          # Usamos 'buildozer android debug' común para que no sature la pantalla de texto plano
           yes | buildozer android debug
 
       - name: Subir APK Resultante
