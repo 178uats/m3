@@ -25,11 +25,21 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython
 
-      - name: Inicializar y Compilar APK
+      - name: Inicializar y Configurar Buildozer
         run: |
           buildozer init
-          # Modifica automaticamente el archivo spec para asegurar que use Kivy
+          # Ajustes para asegurar compatibilidad de Kivy y Android en GitHub
+          sed -i 's/#android.ndk_api = 21/android.ndk_api = 21/g' buildozer.spec
+          sed -i 's/android.api = 33/android.api = 33/g' buildozer.spec
           sed -i 's/requirements = python3,kivy/requirements = python3,kivy/g' buildozer.spec
+
+      - name: Compilar APK limpiando variables de entorno conflictivas
+        run: |
+          # El truco: Borramos las variables preconfiguradas de GitHub para que Buildozer descargue su propio NDK compatible
+          unset ANDROID_NDK
+          unset ANDROID_NDK_HOME
+          unset ANDROID_NDK_ROOT
+          unset ANDROID_NDK_LATEST_HOME
           yes | buildozer -v android debug
 
       - name: Subir APK Resultante
