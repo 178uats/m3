@@ -27,15 +27,13 @@ jobs:
 
       - name: Descargar e Instalar NDK r25c Oficial Manualmente
         run: |
-          # Descargamos directamente desde los servidores de Google el NDK estable
-          wget https://google.com -O ndk.zip
+          wget "https://google.com" -O ndk.zip
           unzip -q ndk.zip -d $HOME/
           rm ndk.zip
 
       - name: Inicializar y Configurar Buildozer con Rutas Absolutas
         run: |
           buildozer init
-          
           # Forzamos los valores del NDK inyectando la ruta de la carpeta que descargamos recién
           sed -i "s|#android.ndk_path =|android.ndk_path = $HOME/android-ndk-r25c|g" buildozer.spec
           sed -i 's/#android.ndk = 25c/android.ndk = 25c/g' buildozer.spec
