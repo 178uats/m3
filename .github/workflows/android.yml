@@ -18,10 +18,10 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Instalar herramientas de compilacion
+      - name: Instalar herramientas de compilacion completas
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libssl-dev cmake
+          sudo apt install -y git zip unzip autoconf libtool libltdl-dev pkg-config zlib1g-dev libncurses5-dev libssl-dev cmake
           pip install --upgrade pip
           pip install buildozer cython
 
@@ -35,7 +35,7 @@ jobs:
 
       - name: Compilar APK limpiando variables de entorno conflictivas
         run: |
-          # El truco: Borramos las variables preconfiguradas de GitHub para que Buildozer descargue su propio NDK compatible
+          # Borramos las variables preconfiguradas de GitHub para evitar conflictos de rutas
           unset ANDROID_NDK
           unset ANDROID_NDK_HOME
           unset ANDROID_NDK_ROOT
