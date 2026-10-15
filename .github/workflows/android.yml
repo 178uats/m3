@@ -21,35 +21,36 @@ jobs:
       - name: Instalar herramientas de compilacion completas
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip autoconf libtool libltdl-dev pkg-config zlib1g-dev libncurses5-dev libssl-dev cmake ccache wget
+          sudo apt install -y git zip unzip autoconf libtool libltdl-dev pkg-config zlib1g-dev libncurses5-dev libssl-dev cmake ccache
           pip install --upgrade pip
           pip install "buildozer>=1.5.0" "cython<3.0.0"
 
-      - name: Descargar e Instalar NDK r25c Oficial Manualmente
-        run: |
-          wget "https://google.com" -O ndk.zip
-          unzip -q ndk.zip -d $HOME/
-          rm ndk.zip
-
-      - name: Inicializar y Configurar Buildozer con Rutas Absolutas
+      - name: Inicializar y Configurar Buildozer
         run: |
           buildozer init
-          # Forzamos los valores del NDK inyectando la ruta de la carpeta que descargamos recién
-          sed -i "s|#android.ndk_path =|android.ndk_path = $HOME/android-ndk-r25c|g" buildozer.spec
-          sed -i 's/#android.ndk = 25c/android.ndk = 25c/g' buildozer.spec
+          
+          # Ajustes base estables recomendados por Kivy
           sed -i 's/#android.ndk_api = 21/android.ndk_api = 21/g' buildozer.spec
           sed -i 's/android.api = 33/android.api = 33/g' buildozer.spec
-          
-          # Resto de ajustes óptimos de velocidad
           sed -i 's/requirements = python3,kivy/requirements = python3,kivy/g' buildozer.spec
+          
+          # Forzamos una sola arquitectura para acelerar y ahorrar memoria
           sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/g' buildozer.spec
           sed -i 's/# android.no-byte-compile-python = False/android.no-byte-compile-python = True/g' buildozer.spec
 
-      - name: Compilar APK Forzando el NDK Correcto
+      - name: Aplicar tu estrategia (Borrar carpetas problemáticas viejas)
         run: |
-          # Le declaramos la variable de entorno directo al compilador para que no use otra cosa
-          export ANDROID_NDK_HOME=$HOME/android-ndk-r25c
-          export ANDROID_NDK_ROOT=$HOME/android-ndk-r25c
+          # Borramos cualquier rastro previo de carpetas de almacenamiento interno
+          rm -rf .buildozer
+          rm -rf ~/.buildozer
+
+      - name: Compilar APK en Limpio (Modo Silencioso)
+        run: |
+          # Limpieza estricta de variables de entorno de GitHub
+          unset ANDROID_NDK
+          unset ANDROID_NDK_HOME
+          unset ANDROID_NDK_ROOT
+          unset ANDROID_NDK_LATEST_HOME
           yes | buildozer android debug
 
       - name: Subir APK Resultante
